@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HomeGuard — Test Runner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0a1628;
+    --navy2:   #132340;
+    --indigo:  #2f5fc4;
+    --indigo2: #4372d4;
+    --sky:     #d4e3ff;
+    --sky2:    #eaf0ff;
+    --gold:    #e8a020;
+    --gold2:   #f5c45e;
+    --rose:    #e84040;
+    --rose2:   #fde8e8;
+    --sage:    #22a86e;
+    --sage2:   #e2f7ef;
+    --amber:   #d97706;
+    --amber2:  #fef3cd;
+    --text1:   #0a1628;
+    --text2:   #3d5070;
+    --text3:   #7a8fa8;
+    --border:  #dde5f0;
+    --surface: #f4f7fc;
+    --white:   #ffffff;
+    --r:       8px;
+    --r-lg:    14px;
+    --shadow:  0 2px 12px rgba(10,22,40,0.08);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text1);
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--indigo), var(--gold));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.25rem; }
+  .logo-text span { color: var(--gold2); }
+  .topbar-right { display: flex; align-items: center; gap: 1rem; }
+  .back-link {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.82rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: background 0.15s;
+  }
+  .back-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  /* ── LAYOUT ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 1.8rem; }
+  .page-sub { font-size: 0.85rem; color: var(--text3); margin-top: 3px; }
+  .run-cmd {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    background: var(--navy2);
+    color: var(--gold2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    user-select: all;
+  }
+
+  /* ── SUMMARY CARDS ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .summary-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .summary-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); }
+  .summary-value { font-family: 'DM Serif Display', serif; font-size: 2rem; }
+  .summary-card.passed .summary-value { color: var(--sage); }
+  .summary-card.failed .summary-value { color: var(--rose); }
+  .summary-card.skipped .summary-value { color: var(--amber); }
+  .summary-card.total .summary-value { color: var(--indigo); }
+  .summary-card.duration .summary-value { font-size: 1.5rem; color: var(--text2); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    background: var(--border);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--sage);
+    transition: width 0.6s ease;
+  }
+  .progress-fill.has-failures {
+    background: linear-gradient(to right, var(--sage) var(--pass-pct), var(--rose) var(--pass-pct));
+  }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .filter-btn:hover:not(.active) { background: var(--sky2); color: var(--indigo); border-color: var(--indigo); }
+  .filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 0 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 16px;
+    margin-left: 4px;
+  }
+  .filter-btn:not(.active) .filter-count { background: var(--border); color: var(--text3); }
+
+  /* ── FILE GROUP ── */
+  .file-group { margin-bottom: 1.5rem; }
+  .file-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .file-header:hover { background: var(--sky2); }
+  .file-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text1);
+    flex: 1;
+  }
+  .file-meta { font-size: 0.78rem; color: var(--text3); }
+  .file-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .file-badge.all-pass { background: var(--sage2); color: var(--sage); }
+  .file-badge.has-fail { background: var(--rose2); color: var(--rose); }
+  .file-chevron { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
+  .file-group.collapsed .file-chevron { transform: rotate(-90deg); }
+  .file-body {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--r-lg) var(--r-lg);
+    overflow: hidden;
+  }
+  .file-group.collapsed .file-body { display: none; }
+
+  /* ── SUITE ── */
+  .suite-name {
+    padding: 0.55rem 1.25rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text3);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .suite-name:first-child { border-top: none; }
+
+  /* ── TEST ROW ── */
+  .test-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.6rem 1.25rem;
+    border-top: 1px solid #f0f4f9;
+    font-size: 0.87rem;
+    transition: background 0.1s;
+  }
+  .test-row:hover { background: var(--sky2); }
+  .test-row.hidden { display: none; }
+
+  .status-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .status-icon.pass { background: var(--sage2); color: var(--sage); }
+  .status-icon.fail { background: var(--rose2); color: var(--rose); }
+  .status-icon.skip { background: var(--amber2); color: var(--amber); }
+
+  .test-name { flex: 1; color: var(--text2); }
+  .test-name .suite-prefix { color: var(--text3); font-size: 0.78rem; }
+  .test-duration {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text3);
+  }
+  .test-error {
+    background: var(--rose2);
+    border-left: 3px solid var(--rose);
+    padding: 0.6rem 1rem;
+    margin: 0 1.25rem 0.75rem;
+    border-radius: 0 var(--r) var(--r) 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--rose);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── TIMESTAMP ── */
+  .run-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text3);
+    margin-bottom: 1rem;
+  }
+  .run-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage); }
+  .run-dot.fail { background: var(--rose); }
+
+  /* ── EMPTY / LOADING STATES ── */
+  .state-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 3rem;
+    text-align: center;
+    color: var(--text3);
+  }
+  .state-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .state-msg { font-size: 0.95rem; }
+  .state-cmd {
+    font-family: 'DM Mono', monospace;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    margin-top: 1rem;
+    display: inline-block;
+    user-select: all;
+    color: var(--indigo);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width: 800px) {
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    .summary-card.duration { grid-column: 1 / -1; }
+    .page-header { flex-direction: column; }
+  }
+  @media(max-width: 520px) {
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .main { padding: 1.25rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🏠</div>
+    <div class="logo-text">Home<span>Guard</span></div>
+  </div>
+  <div class="topbar-right">
+    <a class="back-link" href="index.html">← Back to App</a>
+  </div>
+</header>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Test Runner</div>
+      <div class="page-sub">Playwright end-to-end test results for the HomeGuard Insurance Claims App</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+      <span class="run-cmd">node run-tests.js</span>
+      <span style="font-size:0.75rem;color:var(--text3)">Run locally to refresh results</span>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="state-box">
+      <div class="state-icon">⏳</div>
+      <div class="state-msg">Loading test results…</div>
+    </div>
+  </div>
+</main>
+
+<script>
+(async () => {
+  const app = document.getElementById('app');
+
+  // ── Load results ────────────────────────────────────
+  let data;
+  try {
+    const res = await fetch('test-results.json?_=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch (err) {
+    app.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">📭</div>
+        <div class="state-msg">No test results found — run the tests first.</div>
+        <div class="state-cmd">node run-tests.js</div>
+        <p style="margin-top:1rem;font-size:0.8rem;color:var(--text3)">
+          Results are saved to <strong>test-results.json</strong> and displayed here.
+        </p>
+      </div>`;
+    return;
+  }
+
+  // ── Parse results ───────────────────────────────────
+  const tests = [];   // flat list of {file, suite, title, status, duration, errors}
+  const files = [];   // ordered list of file names
+
+  function walkSuite(suite, fileTitle, parentSuite) {
+    const suiteTitle = parentSuite ? suite.title : null;
+    (suite.specs || []).forEach(spec => {
+      const result = spec.tests?.[0]?.results?.[0] || {};
+      const status = result.status || (spec.ok ? 'passed' : 'failed');
+      const errors = (result.errors || []).map(e => e.message || String(e)).join('\n');
+      tests.push({
+        file:     fileTitle,
+        suite:    suiteTitle || spec.file || fileTitle,
+        title:    spec.title,
+        status:   status === 'passed' ? 'pass' : status === 'skipped' ? 'skip' : 'fail',
+        duration: result.duration || 0,
+        errors:   errors,
+      });
+    });
+    (suite.suites || []).forEach(sub => walkSuite(sub, fileTitle, suite));
+  }
+
+  (data.suites || []).forEach(fileSuite => {
+    files.push(fileSuite.title);
+    walkSuite(fileSuite, fileSuite.title, null);
+  });
+
+  // ── Totals ──────────────────────────────────────────
+  const total   = tests.length;
+  const passed  = tests.filter(t => t.status === 'pass').length;
+  const failed  = tests.filter(t => t.status === 'fail').length;
+  const skipped = tests.filter(t => t.status === 'skip').length;
+  const allOk   = failed === 0;
+
+  const totalDuration = tests.reduce((s, t) => s + t.duration, 0);
+  const durStr = totalDuration >= 60000
+    ? (totalDuration / 60000).toFixed(1) + 'm'
+    : (totalDuration / 1000).toFixed(1) + 's';
+
+  // Determine run timestamp from earliest startTime in raw data
+  let runStamp = '';
+  try {
+    const times = [];
+    (data.suites || []).forEach(function walk(s) {
+      (s.specs || []).forEach(sp => {
+        const t = sp.tests?.[0]?.results?.[0]?.startTime;
+        if (t) times.push(new Date(t));
+      });
+      (s.suites || []).forEach(walk);
+    });
+    if (times.length) {
+      const earliest = new Date(Math.min(...times.map(d => d.getTime())));
+      runStamp = earliest.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+  } catch {}
+
+  const passPct = total ? Math.round((passed / total) * 100) : 0;
+
+  // ── Render ───────────────────────────────────────────
+  let html = '';
+
+  // Run info bar
+  html += `
+    <div class="run-info">
+      <div class="run-dot${allOk ? '' : ' fail'}"></div>
+      <span>${allOk ? 'All tests passed' : failed + ' test' + (failed > 1 ? 's' : '') + ' failed'}</span>
+      ${runStamp ? `<span>·</span><span>Last run: ${runStamp}</span>` : ''}
+      <span>·</span>
+      <span>Playwright ${data.config?.version || ''}</span>
+    </div>`;
+
+  // Summary cards
+  html += `
+    <div class="summary-grid">
+      <div class="summary-card total"><div class="summary-label">Total Tests</div><div class="summary-value">${total}</div></div>
+      <div class="summary-card passed"><div class="summary-label">Passed</div><div class="summary-value">${passed}</div></div>
+      <div class="summary-card failed"><div class="summary-label">Failed</div><div class="summary-value">${failed}</div></div>
+      <div class="summary-card skipped"><div class="summary-label">Skipped</div><div class="summary-value">${skipped}</div></div>
+      <div class="summary-card duration"><div class="summary-label">Total Duration</div><div class="summary-value">${durStr}</div></div>
+    </div>`;
+
+  // Progress bar
+  html += `
+    <div class="progress-wrap">
+      <div class="progress-fill${failed > 0 ? ' has-failures' : ''}" style="width:${passPct}%;--pass-pct:${passPct}%"></div>
+    </div>`;
+
+  // Filter bar
+  html += `
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">All <span class="filter-count">${total}</span></button>
+      <button class="filter-btn" data-filter="pass" onclick="setFilter('pass',this)">Passed <span class="filter-count">${passed}</span></button>
+      ${failed > 0 ? `<button class="filter-btn" data-filter="fail" onclick="setFilter('fail',this)">Failed <span class="filter-count">${failed}</span></button>` : ''}
+      ${skipped > 0 ? `<button class="filter-btn" data-filter="skip" onclick="setFilter('skip',this)">Skipped <span class="filter-count">${skipped}</span></button>` : ''}
+    </div>`;
+
+  // Group tests by file, then suite
+  const byFile = {};
+  tests.forEach(t => {
+    if (!byFile[t.file]) byFile[t.file] = {};
+    if (!byFile[t.file][t.suite]) byFile[t.file][t.suite] = [];
+    byFile[t.file][t.suite].push(t);
+  });
+
+  Object.entries(byFile).forEach(([file, suites]) => {
+    const fileTests   = Object.values(suites).flat();
+    const filePassed  = fileTests.filter(t => t.status === 'pass').length;
+    const fileFailed  = fileTests.filter(t => t.status === 'fail').length;
+    const fileAllPass = fileFailed === 0;
+
+    html += `<div class="file-group" id="file-${CSS.escape(file)}">`;
+    html += `
+      <div class="file-header" onclick="toggleFile('${CSS.escape(file)}')">
+        <span class="file-name">${file}</span>
+        <span class="file-meta">${fileTests.length} tests</span>
+        <span class="file-badge ${fileAllPass ? 'all-pass' : 'has-fail'}">
+          ${fileAllPass ? '✓ All passed' : fileFailed + ' failed'}
+        </span>
+        <span class="file-chevron">▾</span>
+      </div>
+      <div class="file-body">`;
+
+    Object.entries(suites).forEach(([suite, sTests]) => {
+      html += `<div class="suite-name">${suite}</div>`;
+      sTests.forEach(t => {
+        const icons = { pass: '✓', fail: '✗', skip: '−' };
+        const durLabel = t.duration >= 1000
+          ? (t.duration / 1000).toFixed(2) + 's'
+          : t.duration + 'ms';
+
+        html += `
+          <div class="test-row" data-status="${t.status}" data-file="${CSS.escape(file)}">
+            <div class="status-icon ${t.status}">${icons[t.status]}</div>
+            <div class="test-name">${escHtml(t.title)}</div>
+            <div class="test-duration">${durLabel}</div>
+          </div>`;
+
+        if (t.errors) {
+          html += `
+          <div class="test-error" data-status="${t.status}" data-file="${CSS.escape(file)}">${escHtml(t.errors)}</div>`;
+        }
+      });
+    });
+
+    html += `</div></div>`;
+  });
+
+  app.innerHTML = html;
+
+  // ── Client-side filtering ────────────────────────────
+  window.setFilter = function(filter, btn) {
+    document.querySelectorAll('#filterBar .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.test-row, .test-error').forEach(el => {
+      const match = filter === 'all' || el.dataset.status === filter;
+      el.classList.toggle('hidden', !match);
+    });
+
+    // Show/hide empty file groups
+    document.querySelectorAll('.file-group').forEach(fg => {
+      const visible = fg.querySelectorAll('.test-row:not(.hidden)').length > 0;
+      fg.style.display = visible ? '' : 'none';
+    });
+  };
+
+  window.toggleFile = function(id) {
+    const el = document.getElementById('file-' + id);
+    if (el) el.classList.toggle('collapsed');
+  };
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+})();
+</script>
+</body>
+</html>

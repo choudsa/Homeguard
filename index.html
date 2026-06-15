@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HomeGuard — Property Insurance Claims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0a1628;
+    --navy2:   #132340;
+    --navy3:   #1e3358;
+    --indigo:  #2f5fc4;
+    --indigo2: #4372d4;
+    --sky:     #d4e3ff;
+    --sky2:    #eaf0ff;
+    --gold:    #e8a020;
+    --gold2:   #f5c45e;
+    --rose:    #e84040;
+    --rose2:   #fde8e8;
+    --sage:    #22a86e;
+    --sage2:   #e2f7ef;
+    --amber:   #d97706;
+    --amber2:  #fef3cd;
+    --text1:   #0a1628;
+    --text2:   #3d5070;
+    --text3:   #7a8fa8;
+    --border:  #dde5f0;
+    --surface: #f4f7fc;
+    --white:   #ffffff;
+    --r:       10px;
+    --r-lg:    16px;
+    --shadow:  0 2px 12px rgba(10,22,40,0.08);
+    --shadow-lg: 0 8px 32px rgba(10,22,40,0.14);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text1);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--indigo), var(--gold));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.25rem; letter-spacing: 0.01em; }
+  .logo-text span { color: var(--gold2); }
+  .topbar-right { display: flex; align-items: center; gap: 1rem; }
+  .role-badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold2);
+  }
+  .user-pill {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; padding: 4px 10px; border-radius: 20px;
+    transition: background 0.2s;
+  }
+  .user-pill:hover { background: rgba(255,255,255,0.1); }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--indigo2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #fff;
+  }
+  .user-name { font-size: 0.85rem; font-weight: 500; }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; flex: 1; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 230px;
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    display: flex; flex-direction: column; gap: 0.25rem;
+    position: sticky; top: 60px; height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 0.5rem 1rem 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-top: 0.5rem;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.6rem 1.25rem;
+    margin: 0 0.5rem;
+    border-radius: var(--r);
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: var(--text2);
+    transition: all 0.15s;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--sky2); color: var(--indigo); }
+  .nav-item.active { background: var(--sky); color: var(--indigo); font-weight: 600; }
+  .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--rose);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 1px 6px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  /* ── MAIN ── */
+  .main { flex: 1; padding: 2rem; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.75rem;
+  }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 1.65rem; }
+  .page-subtitle { color: var(--text3); font-size: 0.85rem; margin-top: 2px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--r);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--indigo); color: #fff; }
+  .btn-primary:hover { background: var(--navy3); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface); }
+  .btn-success { background: var(--sage); color: #fff; }
+  .btn-success:hover { opacity: 0.88; }
+  .btn-danger { background: var(--rose); color: #fff; }
+  .btn-danger:hover { opacity: 0.88; }
+  .btn-warning { background: var(--amber); color: #fff; }
+  .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.78rem; }
+
+  /* ── STAT CARDS ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.75rem; }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 1.25rem 1.5rem;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .stat-label { font-size: 0.75rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-value { font-family: 'DM Serif Display', serif; font-size: 2rem; }
+  .stat-sub { font-size: 0.78rem; color: var(--text3); }
+  .stat-card.blue .stat-value { color: var(--indigo); }
+  .stat-card.gold .stat-value { color: var(--gold); }
+  .stat-card.green .stat-value { color: var(--sage); }
+  .stat-card.rose .stat-value { color: var(--rose); }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-title { font-weight: 600; font-size: 0.95rem; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.87rem;
+    color: var(--text2);
+    border-bottom: 1px solid #f0f4f9;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--sky2); }
+
+  /* ── STATUS BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .badge-pending { background: var(--amber2); color: var(--amber); }
+  .badge-review  { background: var(--sky);    color: var(--indigo); }
+  .badge-approved{ background: var(--sage2);  color: var(--sage); }
+  .badge-rejected{ background: var(--rose2);  color: var(--rose); }
+  .badge-info    { background: var(--sky);    color: var(--indigo); }
+
+  /* ── FORM ── */
+  .form-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    max-width: 760px;
+  }
+  .form-section-title {
+    font-weight: 600; font-size: 0.9rem; color: var(--text1);
+    margin-bottom: 1rem; padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 0.8rem; font-weight: 500; color: var(--text2); }
+  input, select, textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.87rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    background: var(--white);
+    color: var(--text1);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(47,95,196,0.1); }
+  textarea { resize: vertical; min-height: 90px; }
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--r);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    color: var(--text3);
+    font-size: 0.85rem;
+  }
+  .upload-zone:hover { border-color: var(--indigo); color: var(--indigo); }
+  .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+  /* ── DETAIL PANEL ── */
+  .detail-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+  .detail-main-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+  .detail-hero {
+    background: linear-gradient(135deg, var(--navy), var(--navy3));
+    padding: 1.75rem 2rem;
+    color: #fff;
+  }
+  .detail-hero .claim-id { font-size: 0.78rem; color: rgba(255,255,255,0.55); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .detail-hero .claim-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 4px; }
+  .detail-hero .claim-meta { font-size: 0.82rem; color: rgba(255,255,255,0.65); }
+  .detail-body { padding: 1.75rem 2rem; }
+  .dl { display: grid; grid-template-columns: 140px 1fr; gap: 0.6rem 1rem; font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .dl dt { color: var(--text3); font-weight: 500; }
+  .dl dd { color: var(--text1); font-weight: 400; }
+  .detail-sidebar-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .sidebar-card-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 1rem; color: var(--text1); }
+
+  /* ── TIMELINE ── */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-item { display: flex; gap: 12px; padding-bottom: 1.25rem; position: relative; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-dot {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; z-index: 1;
+  }
+  .tl-dot.blue { background: var(--sky); color: var(--indigo); }
+  .tl-dot.green { background: var(--sage2); color: var(--sage); }
+  .tl-dot.gold  { background: var(--amber2); color: var(--amber); }
+  .tl-line {
+    position: absolute; left: 14px; top: 28px; bottom: 0; width: 1px;
+    background: var(--border);
+  }
+  .tl-item:last-child .tl-line { display: none; }
+  .tl-content { flex: 1; }
+  .tl-label { font-size: 0.83rem; font-weight: 500; color: var(--text1); }
+  .tl-time { font-size: 0.75rem; color: var(--text3); margin-top: 1px; }
+
+  /* ── ACTION NOTES ── */
+  .action-area { border-top: 1px solid var(--border); padding-top: 1.25rem; }
+  .action-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem; }
+  .action-row { display: flex; gap: 8px; margin-top: 0.75rem; }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(10,22,40,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 2rem;
+    width: 500px;
+    max-width: 95vw;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 0.35rem; }
+  .modal-sub { font-size: 0.83rem; color: var(--text3); margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.5rem; }
+
+  /* ── ROLE SWITCHER ── */
+  .role-switcher {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 2rem;
+  }
+  .role-btn {
+    padding: 0.5rem 1.1rem;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .role-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .role-btn:hover:not(.active) { background: var(--sky2); color: var(--indigo); border-color: var(--indigo); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; background: var(--indigo); transition: width 0.4s; }
+
+  /* ── ALERT ── */
+  .alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 0.85rem 1rem;
+    border-radius: var(--r);
+    font-size: 0.84rem;
+    margin-bottom: 1rem;
+  }
+  .alert-success { background: var(--sage2); color: var(--sage); border: 1px solid #a3dfc4; }
+  .alert-warning { background: var(--amber2); color: var(--amber); border: 1px solid #f5d88a; }
+  .alert-icon { font-size: 16px; margin-top: 1px; }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width: 900px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+
+  .clickable { cursor: pointer; }
+  .clickable:hover { text-decoration: underline; color: var(--indigo); }
+  .text-right { text-align: right; }
+  .mt-1 { margin-top: 1rem; }
+  .mt-2 { margin-top: 1.5rem; }
+  .gap-8 { display: flex; gap: 8px; align-items: center; }
+  .amount { font-weight: 600; color: var(--indigo); font-family: 'DM Serif Display', serif; font-size: 1.05rem; }
+  .success-check {
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 3rem 1rem;
+  }
+  .success-check.show { display: flex; }
+  .check-circle {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: var(--sage2); color: var(--sage);
+    font-size: 2.5rem;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🏠</div>
+    <div class="logo-text">Home<span>Guard</span></div>
+  </div>
+  <div class="topbar-right">
+    <span class="role-badge" id="topRoleBadge">Claimant</span>
+    <div class="user-pill">
+      <div class="user-avatar" id="topAvatar">JD</div>
+      <span class="user-name" id="topName">Jane Doe</span>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <!-- nav items injected by JS -->
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ROLE SWITCHER (always visible) -->
+    <div style="margin-bottom:1.5rem">
+      <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:0.6rem">Switch Role</div>
+      <div class="role-switcher">
+        <button class="role-btn active" onclick="switchRole('claimant')">🏠 Claimant</button>
+        <button class="role-btn" onclick="switchRole('reviewer')">🔍 Reviewer</button>
+        <button class="role-btn" onclick="switchRole('approver')">✅ Approver</button>
+        <button class="role-btn" onclick="switchRole('admin')">⚙️ Admin</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════ CLAIMANT PAGES ═══════════════ -->
+    <div id="claimant-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Claims</div>
+          <div class="page-subtitle">Track all your property insurance claims</div>
+        </div>
+        <button class="btn btn-primary" onclick="navigate('claimant-submit')">+ New Claim</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card blue"><div class="stat-label">Total Claims</div><div class="stat-value" id="st_total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card gold"><div class="stat-label">Under Review</div><div class="stat-value" id="st_review">—</div><div class="stat-sub">Awaiting decision</div></div>
+        <div class="stat-card green"><div class="stat-label">Total Approved</div><div class="stat-value" id="st_approved">—</div><div class="stat-sub">Lifetime payouts</div></div>
+        <div class="stat-card rose"><div class="stat-label">Rejected</div><div class="stat-value" id="st_rejected">—</div><div class="stat-sub">Last 12 months</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Claim History</span>
+          <button class="btn btn-ghost btn-sm" onclick="exportClaims()">Export CSV</button>
+        </div>
+        <table>
+          <thead><tr><th>Claim ID</th><th>Incident Type</th><th>Date Filed</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="claimant-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="claimant-submit" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Submit New Claim</div>
+          <div class="page-subtitle">Property / Home Insurance Claim</div>
+        </div>
+        <button class="btn btn-ghost" onclick="navigate('claimant-dashboard')">← Back</button>
+      </div>
+
+      <div id="submitFormWrap">
+      <div class="form-card">
+        <div class="form-section-title">📍 Incident Information</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Incident Date *</label>
+            <input id="f_incidentDate" type="date" />
+          </div>
+          <div class="form-group">
+            <label>Incident Type *</label>
+            <select id="f_incidentType">
+              <option>Fire Damage</option>
+              <option>Water / Flood Damage</option>
+              <option>Storm / Wind Damage</option>
+              <option>Theft / Burglary</option>
+              <option>Vandalism</option>
+              <option>Natural Disaster</option>
+              <option>Structural Damage</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Property Address *</label>
+            <input id="f_address" type="text" placeholder="123 Oak Street, Springfield, IL 62701" />
+          </div>
+          <div class="form-group full">
+            <label>Description of Incident *</label>
+            <textarea id="f_description" placeholder="Please describe what happened in detail — when it occurred, the extent of damage, and any immediate actions you took…"></textarea>
+          </div>
+        </div>
+
+        <div class="form-section-title">💰 Damage Assessment</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Estimated Damage Amount ($) *</label>
+            <input id="f_amount" type="number" placeholder="e.g. 15000" />
+          </div>
+          <div class="form-group">
+            <label>Are Others Injured?</label>
+            <select id="f_injured"><option>No</option><option>Yes — details below</option></select>
+          </div>
+          <div class="form-group">
+            <label>Police Report Filed?</label>
+            <select id="f_police"><option>No</option><option>Yes — attach report</option></select>
+          </div>
+          <div class="form-group">
+            <label>Property Condition</label>
+            <select id="f_condition"><option>Livable</option><option>Temporary Displacement Required</option><option>Uninhabitable</option></select>
+          </div>
+          <div class="form-group full">
+            <label>Items / Areas Damaged (list each item)</label>
+            <textarea id="f_damagedItems" placeholder="e.g. &#10;- Living room ceiling — water stain and collapse&#10;- Master bedroom carpet — mould damage&#10;- Kitchen cabinets — smoke damage"></textarea>
+          </div>
+        </div>
+
+        <div class="form-section-title">📎 Supporting Documents</div>
+        <div class="upload-zone" onclick="this.style.borderColor='var(--indigo)'">
+          <div class="upload-icon">📁</div>
+          <div>Drag & drop files here, or <strong style="color:var(--indigo)">click to browse</strong></div>
+          <div style="margin-top:6px;font-size:0.78rem">Photos, videos, receipts, police reports — PDF, JPG, PNG, MP4 (max 50 MB each)</div>
+        </div>
+
+        <div class="form-section-title mt-2">🔒 Declaration</div>
+        <div class="form-group">
+          <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
+            <input id="f_declaration" type="checkbox" style="width:auto;margin-top:3px"/> 
+            <span>I declare that all information provided is true and accurate. I understand that false claims may result in policy cancellation and legal action.</span>
+          </label>
+        </div>
+        <div id="f_error" style="display:none;color:var(--rose);font-size:0.83rem;margin-top:0.5rem;padding:0.5rem 0.75rem;background:var(--rose2);border-radius:var(--r)"></div>
+
+        <div style="display:flex;gap:10px;margin-top:1.5rem">
+          <button class="btn btn-primary" onclick="submitClaim()">Submit Claim →</button>
+          <button class="btn btn-ghost" onclick="navigate('claimant-dashboard')">Cancel</button>
+        </div>
+      </div>
+      </div>
+
+      <div id="submitSuccess" class="success-check">
+        <div class="check-circle">✓</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:0.4rem">Claim Submitted!</div>
+        <div style="color:var(--text3);font-size:0.9rem;max-width:340px;margin-bottom:1.5rem">Your claim <strong id="newClaimId"></strong> has been received and assigned to a reviewer. You'll receive email updates as it progresses.</div>
+        <button class="btn btn-primary" onclick="navigate('claimant-dashboard')">Back to My Claims</button>
+      </div>
+    </div>
+
+    <div id="claimant-detail" class="page">
+      <div class="page-header">
+        <div>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('claimant-dashboard')" style="margin-bottom:6px">← Back to Claims</button>
+          <div class="page-title">Claim #HG-2024-0041</div>
+          <div class="page-subtitle">Filed May 10, 2025 · Fire Damage</div>
+        </div>
+        <span class="badge badge-review" style="font-size:0.82rem;padding:6px 14px">Under Review</span>
+      </div>
+      <div class="detail-grid">
+        <div>
+          <div class="detail-main-card">
+            <div class="detail-hero">
+              <div class="claim-id">Claim ID · #HG-2024-0041</div>
+              <div class="claim-title">Fire Damage — Kitchen & Living Room</div>
+              <div class="claim-meta">456 Maple Drive, Chicago, IL 60601 · Filed by Jane Doe</div>
+            </div>
+            <div class="detail-body">
+              <div class="form-section-title">Incident Details</div>
+              <dl class="dl">
+                <dt>Incident Date</dt><dd>May 8, 2025</dd>
+                <dt>Property</dt><dd>456 Maple Drive, Chicago, IL 60601</dd>
+                <dt>Incident Type</dt><dd>Fire Damage</dd>
+                <dt>Police Report</dt><dd>Yes — Chicago PD Report #CPD-2025-3812</dd>
+                <dt>Habitable?</dt><dd>Temporary Displacement Required</dd>
+                <dt>Claim Amount</dt><dd class="amount">$14,200</dd>
+              </dl>
+              <div class="form-section-title">Description</div>
+              <p style="font-size:0.87rem;color:var(--text2);line-height:1.7;margin-bottom:1.5rem">A kitchen fire started at approximately 11:30 PM on May 8th due to an unattended stove. The fire spread to the adjacent living room before the fire department arrived. The kitchen is completely destroyed, including all appliances, cabinets, and countertops. The living room sustained significant smoke and minor structural damage to the ceiling.</p>
+              <div class="form-section-title">Damaged Items</div>
+              <ul style="font-size:0.87rem;color:var(--text2);line-height:2;padding-left:1.25rem;margin-bottom:1.5rem">
+                <li>Kitchen — complete destruction of cabinetry, appliances, flooring</li>
+                <li>Living room ceiling — smoke staining, partial collapse</li>
+                <li>Smoke damage throughout ground floor</li>
+                <li>Electrical wiring inspection required</li>
+              </ul>
+              <div class="form-section-title">Supporting Documents</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem">
+                <div class="badge badge-info">📷 fire-damage-01.jpg</div>
+                <div class="badge badge-info">📷 fire-damage-02.jpg</div>
+                <div class="badge badge-info">📄 police-report.pdf</div>
+                <div class="badge badge-info">📄 fire-dept-report.pdf</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">Claim Progress</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px"><span>Processing</span><span style="color:var(--indigo);font-weight:600">60%</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:60%"></div></div>
+              </div>
+            </div>
+            <div style="margin-top:1rem;font-size:0.8rem;color:var(--text3)">Est. decision by June 2, 2025</div>
+          </div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">Activity Timeline</div>
+            <div class="timeline">
+              <div class="tl-item"><div class="tl-line"></div><div class="tl-dot green">✓</div><div class="tl-content"><div class="tl-label">Claim Submitted</div><div class="tl-time">May 10, 2025 · 9:14 AM</div></div></div>
+              <div class="tl-item"><div class="tl-line"></div><div class="tl-dot green">✓</div><div class="tl-content"><div class="tl-label">Assigned to Reviewer</div><div class="tl-time">May 11, 2025 · 8:02 AM</div></div></div>
+              <div class="tl-item"><div class="tl-line"></div><div class="tl-dot blue">🔍</div><div class="tl-content"><div class="tl-label">Site Inspection Scheduled</div><div class="tl-time">May 15, 2025 · 10:30 AM</div></div></div>
+              <div class="tl-item"><div class="tl-dot gold">⏳</div><div class="tl-content"><div class="tl-label">Awaiting Approval</div><div class="tl-time">Pending</div></div></div>
+            </div>
+          </div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">Assigned Reviewer</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="user-avatar" style="width:38px;height:38px;font-size:13px;background:var(--indigo2)">MR</div>
+              <div><div style="font-weight:500;font-size:0.87rem">Michael R.</div><div style="font-size:0.78rem;color:var(--text3)">Senior Claims Reviewer</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ REVIEWER PAGES ═══════════════ -->
+    <div id="reviewer-queue" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Review Queue</div><div class="page-subtitle">Claims assigned for your review</div></div>
+        <div class="gap-8">
+          <select style="width:auto"><option>All Types</option><option>Fire</option><option>Water</option><option>Storm</option><option>Theft</option></select>
+          <select style="width:auto"><option>Newest First</option><option>Oldest First</option><option>Highest Amount</option></select>
+        </div>
+      </div>
+      <div class="alert alert-warning"><span class="alert-icon">⚠️</span><span>3 claims are approaching their SLA deadline. Please prioritize items marked in <strong>gold</strong>.</span></div>
+      <div class="stat-grid">
+        <div class="stat-card blue"><div class="stat-label">Assigned to Me</div><div class="stat-value">7</div><div class="stat-sub">Open claims</div></div>
+        <div class="stat-card gold"><div class="stat-label">Near SLA</div><div class="stat-value">3</div><div class="stat-sub">Due within 48h</div></div>
+        <div class="stat-card green"><div class="stat-label">Completed (Mo)</div><div class="stat-value">24</div><div class="stat-sub">This month</div></div>
+        <div class="stat-card rose"><div class="stat-label">Avg Days Open</div><div class="stat-value">4.2</div><div class="stat-sub">Days per claim</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><span class="table-title">Assigned Claims</span></div>
+        <table>
+          <thead><tr><th>Claim ID</th><th>Claimant</th><th>Incident</th><th>Filed</th><th>Amount</th><th>SLA</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="reviewer-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="reviewer-detail" class="page">
+      <div class="page-header">
+        <div>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('reviewer-queue')" style="margin-bottom:6px">← Back to Queue</button>
+          <div class="page-title">Review: #HG-2024-0041</div>
+          <div class="page-subtitle">Claimant: Jane Doe · Fire Damage · $14,200</div>
+        </div>
+        <span class="badge badge-review" style="font-size:0.82rem;padding:6px 14px">In Review</span>
+      </div>
+      <div class="detail-grid">
+        <div>
+          <div class="detail-main-card">
+            <div class="detail-hero">
+              <div class="claim-id">Claim ID · #HG-2024-0041</div>
+              <div class="claim-title">Fire Damage — Kitchen & Living Room</div>
+              <div class="claim-meta">456 Maple Drive, Chicago, IL 60601 · Submitted May 10, 2025</div>
+            </div>
+            <div class="detail-body">
+              <div class="form-section-title">Claimant Details</div>
+              <dl class="dl">
+                <dt>Name</dt><dd>Jane Doe</dd>
+                <dt>Policy #</dt><dd>HGP-881-4421</dd>
+                <dt>Coverage</dt><dd>Standard Home — $250,000 structure, $80,000 contents</dd>
+                <dt>Deductible</dt><dd>$1,500</dd>
+                <dt>Claim Amount</dt><dd class="amount">$14,200</dd>
+                <dt>Net Payable</dt><dd class="amount">$12,700 (after deductible)</dd>
+              </dl>
+              <div class="form-section-title">Incident Summary</div>
+              <p style="font-size:0.87rem;color:var(--text2);line-height:1.7;margin-bottom:1.5rem">Kitchen fire on May 8 at 11:30 PM caused by unattended stove. Spread to living room. Kitchen fully destroyed; living room ceiling partially collapsed due to smoke/heat. Chicago FD report on file. No injuries. Claimant in temporary accommodation.</p>
+              <div class="form-section-title">Documents Provided</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.5rem">
+                <div class="badge badge-info">📷 fire-damage-01.jpg</div>
+                <div class="badge badge-info">📷 fire-damage-02.jpg</div>
+                <div class="badge badge-info">📷 kitchen-post.jpg</div>
+                <div class="badge badge-info">📄 police-report.pdf</div>
+                <div class="badge badge-info">📄 fire-dept-report.pdf</div>
+              </div>
+              <div class="form-section-title">Reviewer Assessment</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Verified Incident Date</label>
+                  <input type="date" value="2025-05-08" />
+                </div>
+                <div class="form-group">
+                  <label>Verified Claim Amount ($)</label>
+                  <input type="number" value="14200" />
+                </div>
+                <div class="form-group">
+                  <label>Site Inspection Completed?</label>
+                  <select><option>Yes</option><option>No — Scheduled</option><option>Not Required</option></select>
+                </div>
+                <div class="form-group">
+                  <label>Documents Verified?</label>
+                  <select><option>Yes — All Verified</option><option>Partial — Missing Items</option><option>No</option></select>
+                </div>
+                <div class="form-group full">
+                  <label>Reviewer Notes</label>
+                  <textarea placeholder="Add internal notes about this claim, red flags, or recommended settlement amount…">Site inspection completed May 15. Damage consistent with fire report. Kitchen fully gutted. Living room ceiling needs partial replacement. Recommended settlement at full claimed amount minus deductible.</textarea>
+                </div>
+                <div class="form-group">
+                  <label>Recommended Decision</label>
+                  <select><option>Approve — Full Amount</option><option>Approve — Partial Amount</option><option>Request More Info</option><option>Reject</option></select>
+                </div>
+                <div class="form-group">
+                  <label>Recommended Settlement ($)</label>
+                  <input type="number" value="12700" />
+                </div>
+              </div>
+              <div class="action-row">
+                <button class="btn btn-primary" onclick="showModal('sendApproval')">Send to Approver →</button>
+                <button class="btn btn-ghost">Request More Info</button>
+                <button class="btn btn-danger">Flag as Suspicious</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">Policy Coverage Check</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span>Fire Damage</span><span style="color:var(--sage);font-weight:600">✓ Covered</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span>Structural Damage</span><span style="color:var(--sage);font-weight:600">✓ Covered</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span>Temporary Housing</span><span style="color:var(--sage);font-weight:600">✓ Covered</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:0.83rem"><span>Contents</span><span style="color:var(--amber);font-weight:600">⚠ Partial</span></div>
+              <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px;display:flex;justify-content:space-between;font-size:0.83rem;font-weight:600"><span>Remaining Limit</span><span class="amount">$235,800</span></div>
+            </div>
+          </div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">Risk Flags</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--sage)"><span>✓</span><span>No prior claims in 3 years</span></div>
+              <div style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--sage)"><span>✓</span><span>Documents verified</span></div>
+              <div style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--sage)"><span>✓</span><span>Fire dept. report matches</span></div>
+              <div style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--amber)"><span>⚠</span><span>Claim filed 2 days post-incident</span></div>
+            </div>
+          </div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">SLA Status</div>
+            <div style="font-size:1.5rem;font-family:'DM Serif Display',serif;color:var(--rose)">Due Today</div>
+            <div style="font-size:0.78rem;color:var(--text3);margin-top:4px">Opened 5 days ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ APPROVER PAGES ═══════════════ -->
+    <div id="approver-dashboard" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Approval Dashboard</div><div class="page-subtitle">Claims awaiting your final decision</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card blue"><div class="stat-label">Pending Approval</div><div class="stat-value">5</div><div class="stat-sub">Needs decision</div></div>
+        <div class="stat-card green"><div class="stat-label">Approved (Mo)</div><div class="stat-value">$142K</div><div class="stat-sub">Approved this month</div></div>
+        <div class="stat-card rose"><div class="stat-label">Rejected (Mo)</div><div class="stat-value">3</div><div class="stat-sub">This month</div></div>
+        <div class="stat-card gold"><div class="stat-label">Avg Decision Time</div><div class="stat-value">1.8d</div><div class="stat-sub">Days from receipt</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><span class="table-title">Awaiting Decision</span></div>
+        <table>
+          <thead><tr><th>Claim ID</th><th>Claimant</th><th>Type</th><th>Reviewed By</th><th>Recommendation</th><th>Amount</th><th>Action</th></tr></thead>
+          <tbody id="approver-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="approver-detail" class="page">
+      <div class="page-header">
+        <div>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('approver-dashboard')" style="margin-bottom:6px">← Back to Queue</button>
+          <div class="page-title">Final Decision: #HG-2024-0041</div>
+          <div class="page-subtitle">Reviewed by Michael R. · Recommendation: Approve Full</div>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div>
+          <div class="detail-main-card">
+            <div class="detail-hero">
+              <div class="claim-id">Approver Review · #HG-2024-0041</div>
+              <div class="claim-title">Fire Damage — Jane Doe</div>
+              <div class="claim-meta">456 Maple Drive, Chicago · $14,200 claimed · $12,700 net payable</div>
+            </div>
+            <div class="detail-body">
+              <div class="form-section-title">Reviewer Summary</div>
+              <dl class="dl">
+                <dt>Incident</dt><dd>Kitchen fire — May 8, 2025</dd>
+                <dt>Claim Amount</dt><dd class="amount">$14,200</dd>
+                <dt>Deductible</dt><dd>$1,500</dd>
+                <dt>Net Payable</dt><dd class="amount">$12,700</dd>
+                <dt>Documents</dt><dd>✓ All verified</dd>
+                <dt>Site Inspection</dt><dd>✓ Completed May 15</dd>
+                <dt>Recommendation</dt><dd><span class="badge badge-approved">Approve — Full Amount</span></dd>
+              </dl>
+              <div class="form-section-title">Reviewer Notes</div>
+              <p style="font-size:0.87rem;color:var(--text2);line-height:1.7;background:var(--surface);padding:1rem;border-radius:var(--r);margin-bottom:1.5rem;border:1px solid var(--border)">"Site inspection completed May 15. Damage consistent with fire report. Kitchen fully gutted. Living room ceiling needs partial replacement. Recommended settlement at full claimed amount minus deductible."<br/><em style="font-size:0.78rem;color:var(--text3)">— Michael R., Senior Claims Reviewer</em></p>
+              <div class="form-section-title">Your Decision</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Final Decision *</label>
+                  <select id="finalDecision">
+                    <option>Approve — Full Amount ($12,700)</option>
+                    <option>Approve — Partial Amount</option>
+                    <option>Reject</option>
+                    <option>Send Back for More Review</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Settlement Amount ($)</label>
+                  <input type="number" value="12700" />
+                </div>
+                <div class="form-group full">
+                  <label>Approval Notes (visible to claimant)</label>
+                  <textarea placeholder="Message to claimant about the decision…">After thorough review of all submitted documentation and the site inspection report, we are pleased to approve your claim for the full net payable amount of $12,700. Payment will be processed within 5–7 business days.</textarea>
+                </div>
+              </div>
+              <div class="action-row">
+                <button class="btn btn-success" onclick="showModal('finalApprove')">✓ Approve Claim</button>
+                <button class="btn btn-danger" onclick="showModal('finalReject')">✗ Reject Claim</button>
+                <button class="btn btn-ghost">Return to Reviewer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">Risk Summary</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem">
+              <div class="gap-8"><span style="color:var(--sage)">✓</span><span>Low-risk claimant profile</span></div>
+              <div class="gap-8"><span style="color:var(--sage)">✓</span><span>Damage aligns with reported cause</span></div>
+              <div class="gap-8"><span style="color:var(--sage)">✓</span><span>No fraud indicators</span></div>
+              <div class="gap-8"><span style="color:var(--amber)">⚠</span><span>Minor — filing delay of 2 days</span></div>
+            </div>
+          </div>
+          <div class="detail-sidebar-card">
+            <div class="sidebar-card-title">Financial Impact</div>
+            <dl class="dl" style="font-size:0.82rem">
+              <dt>Claimed</dt><dd>$14,200</dd>
+              <dt>Deductible</dt><dd>-$1,500</dd>
+              <dt>Net Payout</dt><dd class="amount">$12,700</dd>
+              <dt>YTD Payouts</dt><dd>$142,400</dd>
+              <dt>Budget Remaining</dt><dd style="color:var(--sage);font-weight:600">$857,600</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ ADMIN PAGES ═══════════════ -->
+    <div id="admin-dashboard" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Admin Overview</div><div class="page-subtitle">System-wide claims management</div></div>
+        <button class="btn btn-primary" onclick="navigate('admin-users')">Manage Users</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card blue"><div class="stat-label">Total Active Claims</div><div class="stat-value">142</div><div class="stat-sub">Across all reviewers</div></div>
+        <div class="stat-card gold"><div class="stat-label">Total Pending</div><div class="stat-value">38</div><div class="stat-sub">Awaiting action</div></div>
+        <div class="stat-card green"><div class="stat-label">Paid Out (YTD)</div><div class="stat-value">$1.2M</div><div class="stat-sub">Year to date</div></div>
+        <div class="stat-card rose"><div class="stat-label">SLA Breaches</div><div class="stat-value">4</div><div class="stat-sub">Needs attention</div></div>
+      </div>
+      <div class="alert alert-warning"><span class="alert-icon">⚠️</span><span>4 claims have breached SLA. <strong>Assign immediately</strong> to avoid compliance issues.</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div class="table-card">
+          <div class="table-header"><span class="table-title">Reviewer Workload</span></div>
+          <table>
+            <thead><tr><th>Reviewer</th><th>Assigned</th><th>Completed</th><th>Avg Time</th></tr></thead>
+            <tbody>
+              <tr><td>Michael R.</td><td>7</td><td>24</td><td>3.8d</td></tr>
+              <tr><td>Sarah K.</td><td>5</td><td>31</td><td>2.9d</td></tr>
+              <tr><td>James O.</td><td>9</td><td>18</td><td>5.1d</td></tr>
+              <tr><td>Priya M.</td><td>3</td><td>22</td><td>3.2d</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><span class="table-title">Claims by Type</span></div>
+          <table>
+            <thead><tr><th>Incident Type</th><th>Count</th><th>Avg Payout</th></tr></thead>
+            <tbody>
+              <tr><td>Fire Damage</td><td>28</td><td>$16,400</td></tr>
+              <tr><td>Water / Flood</td><td>41</td><td>$8,200</td></tr>
+              <tr><td>Storm / Wind</td><td>35</td><td>$22,100</td></tr>
+              <tr><td>Theft</td><td>22</td><td>$6,800</td></tr>
+              <tr><td>Other</td><td>16</td><td>$11,300</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="admin-users" class="page">
+      <div class="page-header">
+        <div><div class="page-title">User Management</div><div class="page-subtitle">Manage accounts and roles</div></div>
+        <button class="btn btn-primary" onclick="showModal('addUser')">+ Add User</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">All Users</span>
+          <input type="text" placeholder="Search users…" style="width:200px" />
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Active</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>Jane Doe</td><td>jane@example.com</td><td><span class="badge badge-info">Claimant</span></td><td><span class="badge badge-approved">Active</span></td><td>Today</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td>Michael R.</td><td>m.r@homeguard.com</td><td><span class="badge badge-review">Reviewer</span></td><td><span class="badge badge-approved">Active</span></td><td>Today</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td>Sarah K.</td><td>s.k@homeguard.com</td><td><span class="badge badge-review">Reviewer</span></td><td><span class="badge badge-approved">Active</span></td><td>Yesterday</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td>David Park</td><td>dpark@homeguard.com</td><td><span class="badge badge-pending">Approver</span></td><td><span class="badge badge-approved">Active</span></td><td>Today</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td>Admin User</td><td>admin@homeguard.com</td><td><span class="badge badge-rejected">Admin</span></td><td><span class="badge badge-approved">Active</span></td><td>Today</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td>Robert Kim</td><td>rkim@example.com</td><td><span class="badge badge-info">Claimant</span></td><td><span class="badge badge-pending">Suspended</span></td><td>Apr 30</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════ MODALS ═══════════ -->
+<div class="modal-overlay" id="modal-sendApproval" onclick="closeModal('sendApproval')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Send to Approver</div>
+    <div class="modal-sub">This claim will be escalated to an approver for final decision.</div>
+    <div class="form-group"><label>Add a note for the approver</label><textarea style="min-height:80px">Site inspection confirmed. Damage is consistent with fire report. Recommending full approval minus deductible.</textarea></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('sendApproval')">Cancel</button><button class="btn btn-primary" onclick="sendToApprover()">Send to Approver →</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-finalApprove" onclick="closeModal('finalApprove')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" style="color:var(--sage)">✓ Approve Claim</div>
+    <div class="modal-sub">This action will approve the claim and initiate a payout of <strong>$12,700</strong> to Jane Doe.</div>
+    <div class="alert alert-success"><span class="alert-icon">✓</span>Payment will be processed within 5–7 business days.</div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('finalApprove')">Cancel</button><button class="btn btn-success" onclick="approveClaim()">Confirm Approval</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-finalReject" onclick="closeModal('finalReject')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" style="color:var(--rose)">✗ Reject Claim</div>
+    <div class="modal-sub">Please provide a reason for rejection. This will be shared with the claimant.</div>
+    <div class="form-group"><label>Rejection Reason *</label><textarea style="min-height:80px" placeholder="e.g. Insufficient evidence, Policy exclusion…"></textarea></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('finalReject')">Cancel</button><button class="btn btn-danger" onclick="rejectClaim()">Confirm Rejection</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-addUser" onclick="closeModal('addUser')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Add New User</div>
+    <div class="modal-sub">The user will receive an email invitation to set up their account.</div>
+    <div class="form-grid" style="margin-bottom:0">
+      <div class="form-group"><label>First Name</label><input placeholder="Jane"/></div>
+      <div class="form-group"><label>Last Name</label><input placeholder="Doe"/></div>
+      <div class="form-group full"><label>Email Address</label><input type="email" placeholder="jane@example.com"/></div>
+      <div class="form-group full"><label>Role</label><select><option>Claimant</option><option>Reviewer</option><option>Approver</option><option>Admin</option></select></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('addUser')">Cancel</button><button class="btn btn-primary" onclick="addUser()">Send Invitation</button></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  DATA LAYER — localStorage persistence
+// ════════════════════════════════════════════════
+
+const STORAGE_KEY = 'hg_claims';
+const USERS_KEY   = 'hg_users';
+
+// Seed data — pre-loaded on first visit
+const SEED_CLAIMS = [
+  { id:'#HG-2024-0041', type:'Fire Damage',    address:'456 Maple Drive, Chicago, IL 60601',   date:'2025-05-10', amount:14200, status:'review',   description:'Kitchen fire on May 8 at 11:30 PM caused by unattended stove. Spread to living room.', condition:'Temporary Displacement Required', police:'Yes — attach report', injured:'No', damagedItems:'Kitchen — cabinetry, appliances, flooring\nLiving room ceiling — smoke staining', filedBy:'Jane Doe', timeline:[{label:'Claim Submitted',time:'May 10, 2025 · 9:14 AM',dot:'green'},{label:'Assigned to Reviewer',time:'May 11, 2025 · 8:02 AM',dot:'green'},{label:'Site Inspection Scheduled',time:'May 15, 2025 · 10:30 AM',dot:'blue'},{label:'Awaiting Approval',time:'Pending',dot:'gold'}] },
+  { id:'#HG-2024-0038', type:'Water / Flood Damage', address:'789 Elm St, Chicago, IL 60602', date:'2025-04-22', amount:3800,  status:'pending',  description:'Water leak from upstairs bathroom flooded master bedroom and hallway.', condition:'Livable', police:'No', injured:'No', damagedItems:'Master bedroom flooring\nHallway carpet', filedBy:'Jane Doe', timeline:[{label:'Claim Submitted',time:'Apr 22, 2025 · 2:00 PM',dot:'green'},{label:'Awaiting Review',time:'Pending',dot:'gold'}] },
+  { id:'#HG-2023-0029', type:'Storm / Wind Damage',  address:'456 Maple Drive, Chicago, IL 60601', date:'2024-11-05', amount:22000, status:'approved', description:'Severe storm caused roof damage and broken windows.', condition:'Livable', police:'No', injured:'No', damagedItems:'Roof shingles\nFront windows', filedBy:'Jane Doe', timeline:[{label:'Claim Submitted',time:'Nov 5, 2024',dot:'green'},{label:'Approved',time:'Nov 20, 2024',dot:'green'}] },
+  { id:'#HG-2023-0011', type:'Theft / Burglary',     address:'456 Maple Drive, Chicago, IL 60601', date:'2024-06-18', amount:6400,  status:'rejected', description:'Burglary — electronics and jewellery stolen.', condition:'Livable', police:'Yes — attach report', injured:'No', damagedItems:'TV, laptop, jewellery', filedBy:'Jane Doe', timeline:[{label:'Claim Submitted',time:'Jun 18, 2024',dot:'green'},{label:'Rejected',time:'Jul 2, 2024',dot:'gold'}] },
+];
+
+const SEED_USERS = [
+  { name:'Jane Doe',    email:'jane@example.com',    role:'Claimant', status:'Active',    lastActive:'Today' },
+  { name:'Michael R.',  email:'m.r@homeguard.com',   role:'Reviewer', status:'Active',    lastActive:'Today' },
+  { name:'Sarah K.',    email:'s.k@homeguard.com',   role:'Reviewer', status:'Active',    lastActive:'Yesterday' },
+  { name:'David Park',  email:'dpark@homeguard.com', role:'Approver', status:'Active',    lastActive:'Today' },
+  { name:'Admin User',  email:'admin@homeguard.com', role:'Admin',    status:'Active',    lastActive:'Today' },
+  { name:'Robert Kim',  email:'rkim@example.com',    role:'Claimant', status:'Suspended', lastActive:'Apr 30' },
+];
+
+function loadClaims() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) { saveClaims(SEED_CLAIMS); return SEED_CLAIMS; }
+  return JSON.parse(raw);
+}
+function saveClaims(claims) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(claims));
+}
+function loadUsers() {
+  const raw = localStorage.getItem(USERS_KEY);
+  if (!raw) { saveUsers(SEED_USERS); return SEED_USERS; }
+  return JSON.parse(raw);
+}
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+function nextClaimId() {
+  const claims = loadClaims();
+  const year = new Date().getFullYear();
+  const nums = claims
+    .filter(c => c.id.includes(year))
+    .map(c => parseInt(c.id.split('-').pop()));
+  const max = nums.length ? Math.max(...nums) : 0;
+  return `#HG-${year}-${String(max + 1).padStart(4, '0')}`;
+}
+
+// ════════════════════════════════════════════════
+//  ROLE CONFIG
+// ════════════════════════════════════════════════
+const roles = {
+  claimant: {
+    name:'Jane Doe', initials:'JD', label:'Claimant',
+    nav:[
+      { id:'claimant-dashboard', label:'Dashboard', icon:'🏠' },
+      { id:'claimant-submit',    label:'New Claim',  icon:'➕' },
+    ]
+  },
+  reviewer: {
+    name:'Michael R.', initials:'MR', label:'Reviewer',
+    nav:[
+      { id:'reviewer-queue',  label:'Review Queue', icon:'📋' },
+      { id:'reviewer-detail', label:'Open Claim',   icon:'🔍' },
+    ]
+  },
+  approver: {
+    name:'David Park', initials:'DP', label:'Approver',
+    nav:[
+      { id:'approver-dashboard', label:'Approvals',     icon:'✅' },
+      { id:'approver-detail',    label:'Open Decision', icon:'⚖️' },
+    ]
+  },
+  admin: {
+    name:'Admin User', initials:'AU', label:'Admin',
+    nav:[
+      { id:'admin-dashboard', label:'Overview', icon:'📊' },
+      { id:'admin-users',     label:'Users',    icon:'👥' },
+    ]
+  }
+};
+
+let currentRole = 'claimant';
+let currentPage = 'claimant-dashboard';
+let selectedClaimId = null;
+
+// ════════════════════════════════════════════════
+//  RENDER HELPERS
+// ════════════════════════════════════════════════
+
+function statusBadge(status) {
+  const map = {
+    pending:  ['badge-pending',  'Pending'],
+    review:   ['badge-review',   'Under Review'],
+    approved: ['badge-approved', 'Approved'],
+    rejected: ['badge-rejected', 'Rejected'],
+    approver: ['badge-review',   'Awaiting Approver'],
+  };
+  const [cls, label] = map[status] || ['badge-pending', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function fmtMoney(n) {
+  return '$' + Number(n).toLocaleString();
+}
+
+// ════════════════════════════════════════════════
+//  CLAIMANT DASHBOARD
+// ════════════════════════════════════════════════
+
+function renderClaimantDashboard() {
+  const claims = loadClaims().filter(c => c.filedBy === 'Jane Doe');
+  const total    = claims.length;
+  const inReview = claims.filter(c => c.status === 'review' || c.status === 'approver').length;
+  const approved = claims.filter(c => c.status === 'approved').reduce((s, c) => s + c.amount, 0);
+  const rejected = claims.filter(c => c.status === 'rejected').length;
+
+  document.getElementById('st_total').textContent    = total;
+  document.getElementById('st_review').textContent   = inReview;
+  document.getElementById('st_approved').textContent = fmtMoney(approved);
+  document.getElementById('st_rejected').textContent = rejected;
+
+  const tbody = document.getElementById('claimant-tbody');
+  if (!claims.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:2rem">No claims yet. Click "New Claim" to get started.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = claims.map(c => `
+    <tr>
+      <td class="clickable" onclick="viewClaim('${c.id}')">${c.id}</td>
+      <td>${c.type}</td>
+      <td>${fmtDate(c.date)}</td>
+      <td class="amount">${fmtMoney(c.amount)}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewClaim('${c.id}')">View</button></td>
+    </tr>`).join('');
+}
+
+function viewClaim(id) {
+  selectedClaimId = id;
+  renderClaimDetail(id);
+  navigate('claimant-detail');
+}
+
+function renderClaimDetail(id) {
+  const c = loadClaims().find(cl => cl.id === id);
+  if (!c) return;
+  document.querySelector('#claimant-detail .page-title').textContent = `Claim ${c.id}`;
+  document.querySelector('#claimant-detail .page-subtitle').textContent = `Filed ${fmtDate(c.date)} · ${c.type}`;
+  document.querySelector('#claimant-detail .detail-hero .claim-id').textContent = `Claim ID · ${c.id}`;
+  document.querySelector('#claimant-detail .detail-hero .claim-title').textContent = `${c.type} — ${c.address.split(',')[0]}`;
+  document.querySelector('#claimant-detail .detail-hero .claim-meta').textContent = `${c.address} · Filed by ${c.filedBy}`;
+  // details
+  const dl = document.querySelector('#claimant-detail .dl');
+  dl.innerHTML = `
+    <dt>Incident Date</dt><dd>${fmtDate(c.date)}</dd>
+    <dt>Property</dt><dd>${c.address}</dd>
+    <dt>Incident Type</dt><dd>${c.type}</dd>
+    <dt>Police Report</dt><dd>${c.police}</dd>
+    <dt>Habitable?</dt><dd>${c.condition}</dd>
+    <dt>Claim Amount</dt><dd class="amount">${fmtMoney(c.amount)}</dd>`;
+  document.querySelector('#claimant-detail .detail-body p').textContent = c.description;
+  // status badge in header
+  const headerBadge = document.querySelector('#claimant-detail .page-header .badge');
+  if (headerBadge) headerBadge.outerHTML = statusBadge(c.status);
+  // timeline
+  const tl = document.querySelector('#claimant-detail .timeline');
+  if (tl && c.timeline) {
+    tl.innerHTML = c.timeline.map((t, i) => `
+      <div class="tl-item">
+        ${i < c.timeline.length - 1 ? '<div class="tl-line"></div>' : ''}
+        <div class="tl-dot ${t.dot}">${t.dot==='green'?'✓':t.dot==='blue'?'🔍':'⏳'}</div>
+        <div class="tl-content"><div class="tl-label">${t.label}</div><div class="tl-time">${t.time}</div></div>
+      </div>`).join('');
+  }
+}
+
+// ════════════════════════════════════════════════
+//  SUBMIT CLAIM
+// ════════════════════════════════════════════════
+
+function submitClaim() {
+  const date    = document.getElementById('f_incidentDate').value;
+  const type    = document.getElementById('f_incidentType').value;
+  const address = document.getElementById('f_address').value.trim();
+  const desc    = document.getElementById('f_description').value.trim();
+  const amount  = document.getElementById('f_amount').value;
+  const checked = document.getElementById('f_declaration').checked;
+  const errEl   = document.getElementById('f_error');
+
+  // Validation
+  if (!date || !address || !desc || !amount) {
+    errEl.textContent = '⚠ Please fill in all required fields (date, address, description, amount).';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!checked) {
+    errEl.textContent = '⚠ Please accept the declaration before submitting.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const id = nextClaimId();
+  const now = new Date().toISOString().split('T')[0];
+  const newClaim = {
+    id,
+    type,
+    address,
+    date: now,
+    amount: parseFloat(amount),
+    status: 'pending',
+    description: desc,
+    condition:   document.getElementById('f_condition').value,
+    police:      document.getElementById('f_police').value,
+    injured:     document.getElementById('f_injured').value,
+    damagedItems:document.getElementById('f_damagedItems').value,
+    filedBy: 'Jane Doe',
+    timeline: [
+      { label:'Claim Submitted', time: new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}), dot:'green' },
+      { label:'Awaiting Review', time:'Pending', dot:'gold' }
+    ]
+  };
+
+  const claims = loadClaims();
+  claims.unshift(newClaim);
+  saveClaims(claims);
+
+  document.getElementById('newClaimId').textContent = id;
+  document.getElementById('submitFormWrap').style.display = 'none';
+  document.getElementById('submitSuccess').classList.add('show');
+}
+
+function resetSubmitForm() {
+  document.getElementById('submitFormWrap').style.display = '';
+  document.getElementById('submitSuccess').classList.remove('show');
+  document.getElementById('f_incidentDate').value = '';
+  document.getElementById('f_address').value = '';
+  document.getElementById('f_description').value = '';
+  document.getElementById('f_amount').value = '';
+  document.getElementById('f_damagedItems').value = '';
+  document.getElementById('f_declaration').checked = false;
+  document.getElementById('f_error').style.display = 'none';
+}
+
+function exportClaims() {
+  const claims = loadClaims();
+  const header = 'Claim ID,Type,Address,Date Filed,Amount,Status,Filed By\n';
+  const rows = claims.map(c =>
+    `${c.id},"${c.type}","${c.address}",${c.date},${c.amount},${c.status},${c.filedBy}`
+  ).join('\n');
+  const blob = new Blob([header + rows], { type:'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'homeguard-claims.csv';
+  a.click();
+}
+
+// ════════════════════════════════════════════════
+//  REVIEWER QUEUE
+// ════════════════════════════════════════════════
+
+function renderReviewerQueue() {
+  const claims = loadClaims().filter(c => c.status === 'pending' || c.status === 'review');
+  const tbody = document.getElementById('reviewer-tbody');
+
+  // Update sidebar badge
+  const pendingCount = claims.length;
+  roles.reviewer.nav[0].badge = pendingCount || null;
+
+  if (!claims.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:2rem">No claims in queue.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = claims.map(c => {
+    const daysOpen = Math.floor((Date.now() - new Date(c.date)) / 86400000);
+    const slaColor = daysOpen > 5 ? 'var(--rose)' : daysOpen > 3 ? 'var(--amber)' : 'var(--text3)';
+    const slaLabel = daysOpen > 5 ? 'Overdue' : daysOpen > 3 ? `${daysOpen}d` : `${daysOpen}d`;
+    return `<tr>
+      <td>${c.id}</td>
+      <td>${c.filedBy}</td>
+      <td>${c.type}</td>
+      <td>${fmtDate(c.date)}</td>
+      <td class="amount">${fmtMoney(c.amount)}</td>
+      <td style="color:${slaColor};font-weight:600">${slaLabel}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="reviewClaim('${c.id}')">Review</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function reviewClaim(id) {
+  selectedClaimId = id;
+  renderReviewerDetail(id);
+  navigate('reviewer-detail');
+}
+
+function renderReviewerDetail(id) {
+  const c = loadClaims().find(cl => cl.id === id);
+  if (!c) return;
+  document.querySelector('#reviewer-detail .page-title').textContent = `Review: ${c.id}`;
+  document.querySelector('#reviewer-detail .page-subtitle').textContent = `Claimant: ${c.filedBy} · ${c.type} · ${fmtMoney(c.amount)}`;
+  document.querySelector('#reviewer-detail .detail-hero .claim-id').textContent = `Claim ID · ${c.id}`;
+  document.querySelector('#reviewer-detail .detail-hero .claim-title').textContent = `${c.type} — ${c.address.split(',')[0]}`;
+  document.querySelector('#reviewer-detail .detail-hero .claim-meta').textContent = `${c.address} · Submitted ${fmtDate(c.date)}`;
+  const dl = document.querySelector('#reviewer-detail .dl');
+  dl.innerHTML = `
+    <dt>Name</dt><dd>${c.filedBy}</dd>
+    <dt>Policy #</dt><dd>HGP-${Math.floor(100+Math.random()*900)}-${Math.floor(1000+Math.random()*9000)}</dd>
+    <dt>Coverage</dt><dd>Standard Home — $250,000 structure, $80,000 contents</dd>
+    <dt>Deductible</dt><dd>$1,500</dd>
+    <dt>Claim Amount</dt><dd class="amount">${fmtMoney(c.amount)}</dd>
+    <dt>Net Payable</dt><dd class="amount">${fmtMoney(Math.max(0, c.amount - 1500))} (after deductible)</dd>`;
+  document.querySelector('#reviewer-detail .detail-body p').textContent = c.description;
+}
+
+function sendToApprover() {
+  if (!selectedClaimId) return;
+  const claims = loadClaims();
+  const idx = claims.findIndex(c => c.id === selectedClaimId);
+  if (idx === -1) return;
+  claims[idx].status = 'approver';
+  claims[idx].timeline = [
+    ...(claims[idx].timeline || []),
+    { label:'Sent to Approver', time: new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric'}), dot:'blue' }
+  ];
+  saveClaims(claims);
+  closeModal('sendApproval');
+  navigate('reviewer-queue');
+}
+
+// ════════════════════════════════════════════════
+//  APPROVER QUEUE
+// ════════════════════════════════════════════════
+
+function renderApproverQueue() {
+  const claims = loadClaims().filter(c => c.status === 'approver');
+  const tbody = document.getElementById('approver-tbody');
+  roles.approver.nav[0].badge = claims.length || null;
+
+  if (!claims.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem">No claims awaiting approval.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = claims.map(c => `
+    <tr>
+      <td>${c.id}</td>
+      <td>${c.filedBy}</td>
+      <td>${c.type}</td>
+      <td>Michael R.</td>
+      <td><span class="badge badge-approved">Approve Full</span></td>
+      <td class="amount">${fmtMoney(Math.max(0, c.amount - 1500))}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="decideOnClaim('${c.id}')">Decide</button></td>
+    </tr>`).join('');
+}
+
+function decideOnClaim(id) {
+  selectedClaimId = id;
+  renderApproverDetail(id);
+  navigate('approver-detail');
+}
+
+function renderApproverDetail(id) {
+  const c = loadClaims().find(cl => cl.id === id);
+  if (!c) return;
+  const net = Math.max(0, c.amount - 1500);
+  document.querySelector('#approver-detail .page-title').textContent = `Final Decision: ${c.id}`;
+  document.querySelector('#approver-detail .page-subtitle').textContent = `Reviewed by Michael R. · Recommendation: Approve Full`;
+  document.querySelector('#approver-detail .detail-hero .claim-id').textContent = `Approver Review · ${c.id}`;
+  document.querySelector('#approver-detail .detail-hero .claim-title').textContent = `${c.type} — ${c.filedBy}`;
+  document.querySelector('#approver-detail .detail-hero .claim-meta').textContent = `${c.address} · ${fmtMoney(c.amount)} claimed · ${fmtMoney(net)} net payable`;
+  const dl = document.querySelector('#approver-detail .dl');
+  dl.innerHTML = `
+    <dt>Incident</dt><dd>${c.type} — ${fmtDate(c.date)}</dd>
+    <dt>Claim Amount</dt><dd class="amount">${fmtMoney(c.amount)}</dd>
+    <dt>Deductible</dt><dd>$1,500</dd>
+    <dt>Net Payable</dt><dd class="amount">${fmtMoney(net)}</dd>
+    <dt>Documents</dt><dd>✓ All verified</dd>
+    <dt>Site Inspection</dt><dd>✓ Completed</dd>
+    <dt>Recommendation</dt><dd><span class="badge badge-approved">Approve — Full Amount</span></dd>`;
+  // update modal payout amount
+  document.querySelector('#modal-finalApprove .modal-sub').innerHTML =
+    `This action will approve the claim and initiate a payout of <strong>${fmtMoney(net)}</strong> to ${c.filedBy}.`;
+}
+
+function approveClaim() {
+  if (!selectedClaimId) return;
+  const claims = loadClaims();
+  const idx = claims.findIndex(c => c.id === selectedClaimId);
+  if (idx === -1) return;
+  claims[idx].status = 'approved';
+  claims[idx].timeline = [
+    ...(claims[idx].timeline || []),
+    { label:'Claim Approved', time: new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric'}), dot:'green' }
+  ];
+  saveClaims(claims);
+  closeModal('finalApprove');
+  navigate('approver-dashboard');
+}
+
+function rejectClaim() {
+  if (!selectedClaimId) return;
+  const claims = loadClaims();
+  const idx = claims.findIndex(c => c.id === selectedClaimId);
+  if (idx === -1) return;
+  claims[idx].status = 'rejected';
+  claims[idx].timeline = [
+    ...(claims[idx].timeline || []),
+    { label:'Claim Rejected', time: new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric'}), dot:'gold' }
+  ];
+  saveClaims(claims);
+  closeModal('finalReject');
+  navigate('approver-dashboard');
+}
+
+// ════════════════════════════════════════════════
+//  ADMIN
+// ════════════════════════════════════════════════
+
+function renderAdminUsers() {
+  const users = loadUsers();
+  const tbody = document.querySelector('#admin-users tbody');
+  const roleBadgeMap = { Claimant:'badge-info', Reviewer:'badge-review', Approver:'badge-pending', Admin:'badge-rejected' };
+  tbody.innerHTML = users.map((u, i) => `
+    <tr>
+      <td>${u.name}</td>
+      <td>${u.email}</td>
+      <td><span class="badge ${roleBadgeMap[u.role]||'badge-info'}">${u.role}</span></td>
+      <td><span class="badge ${u.status==='Active'?'badge-approved':'badge-pending'}">${u.status}</span></td>
+      <td>${u.lastActive}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editUser(${i})">Edit</button></td>
+    </tr>`).join('');
+}
+
+function addUser() {
+  const first = document.querySelector('#modal-addUser input:nth-of-type(1)').value.trim();
+  const last  = document.querySelector('#modal-addUser input:nth-of-type(2)').value.trim();
+  const email = document.querySelector('#modal-addUser input[type="email"]').value.trim();
+  const role  = document.querySelector('#modal-addUser select').value;
+  if (!first || !email) { alert('Name and email are required.'); return; }
+  const users = loadUsers();
+  users.push({ name:`${first} ${last}`, email, role, status:'Active', lastActive:'Just now' });
+  saveUsers(users);
+  closeModal('addUser');
+  renderAdminUsers();
+}
+
+function editUser(i) {
+  const users = loadUsers();
+  const u = users[i];
+  const newRole = prompt(`Edit role for ${u.name}:`, u.role);
+  if (newRole && ['Claimant','Reviewer','Approver','Admin'].includes(newRole)) {
+    users[i].role = newRole;
+    saveUsers(users);
+    renderAdminUsers();
+  }
+}
+
+// User search filter
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.querySelector('#admin-users input[type="text"]');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      document.querySelectorAll('#admin-users tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+});
+
+// ════════════════════════════════════════════════
+//  NAVIGATION & ROLE SWITCHING
+// ════════════════════════════════════════════════
+
+function switchRole(role) {
+  currentRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(role));
+  });
+  const r = roles[role];
+  document.getElementById('topRoleBadge').textContent = r.label;
+  document.getElementById('topAvatar').textContent = r.initials;
+  document.getElementById('topName').textContent = r.name;
+  buildSidebar(role);
+  navigate(r.nav[0].id);
+}
+
+function buildSidebar(role) {
+  const sidebar = document.getElementById('sidebar');
+  const r = roles[role];
+  sidebar.innerHTML = `<div class="sidebar-section">${r.label} Menu</div>`;
+  r.nav.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'nav-item' + (item.id === currentPage ? ' active' : '');
+    el.innerHTML = `<span class="nav-icon">${item.icon}</span>${item.label}${item.badge ? `<span class="nav-badge">${item.badge}</span>` : ''}`;
+    el.onclick = () => navigate(item.id);
+    sidebar.appendChild(el);
+  });
+}
+
+function navigate(pageId) {
+  // Reset submit form when going back to it
+  if (pageId === 'claimant-submit') resetSubmitForm();
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById(pageId);
+  if (pg) pg.classList.add('active');
+  currentPage = pageId;
+
+  // Render dynamic content for the page we just navigated to
+  if (pageId === 'claimant-dashboard') renderClaimantDashboard();
+  if (pageId === 'reviewer-queue')     renderReviewerQueue();
+  if (pageId === 'approver-dashboard') renderApproverQueue();
+  if (pageId === 'admin-users')        renderAdminUsers();
+
+  buildSidebar(currentRole);
+  window.scrollTo(0, 0);
+}
+
+function showModal(name) {
+  document.getElementById('modal-' + name).classList.add('open');
+}
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('open');
+}
+
+// ════════════════════════════════════════════════
+//  BOOT
+// ════════════════════════════════════════════════
+loadClaims(); // seeds if empty
+loadUsers();
+buildSidebar('claimant');
+renderClaimantDashboard();
+</script>
+</body>
+</html>

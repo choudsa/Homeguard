@@ -1,0 +1,13 @@
+{
+  "name": "insurance-tests",
+  "version": "1.0.0",
+  "description": "Test suite for HomeGuard Insurance Claims App",
+  "scripts": {
+    "test": "node run-tests.js",
+    "test:watch": "node run-tests.js --watch",
+    "test:report": "node run-tests.js && open test-report/index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
